@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca Online</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+  <body>
+    <header>
+        <div class="cabecalho">
+            <h1>📚 Biblioteca Online</h1>
+            <p>Pesquise livros utilizando a Open Library</p>
+        </div>
+    </header>
+
+    <main>
+        <section class="pesquisa">
+            <h2>Pesquisar livros</h2>
+            <p>
+                Digite o nome de um livro ou autor para encontrar informações.
+            </p>
+            <div class="barra-pesquisa">
+                <input type="text" id="campoPesquisa" placeholder="Digite o nome do livro ou autor">
+
+                <button onclick="pesquisarLivros()">
+                    Pesquisar
+                </button>
+            </div>
+
+            <p id="mensagem"></p>
+        </section>
+
+        <section class="area-resultados">
+            <h2>Resultados da pesquisa</h2>
+            <div id="resultados" class="resultados"></div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>
+            Projeto acadêmico utilizando a API Open Library |
+            Feito por Helena Oliveira & Rafaela Mafra
+        </p>
+    </footer>
+
+
+
+    <script>
+        async function pesquisarLivros() {
+            let pesquisa = document.getElementById("campoPesquisa").value;
+            let resultados = document.getElementById("resultados");
+            let mensagem = document.getElementById("mensagem");
+
+            if (pesquisa.trim() === "") {
+                mensagem.textContent =
+                    "Digite o nome de um livro ou autor.";
+                resultados.innerHTML = "";
+
+                return;
+            }
+
+            mensagem.textContent = "Pesquisando...";
+            resultados.innerHTML = "";
+
+            try {
+                let resposta = await fetch(
+                    "https://openlibrary.org/search.json?q="
+                    + encodeURIComponent(pesquisa)
+                );
+
+                let dados = await resposta.json();
+
+                resultados.innerHTML = "";
+                mensagem.textContent = "";
+
+                if (dados.docs.length === 0) {
+                    mensagem.textContent =
+                        "Nenhum livro encontrado.";
+
+                    return;
+                }
+
+                for (
+                    let i = 0;
+                    i < dados.docs.length && i < 12;
+                    i++
+                ) {
+
+                    let livro = dados.docs[i];
+
+                    let titulo =
+                        livro.title || "Título não informado";
+
+                    let autor;
+
+                    if (livro.author_name) {
+                        autor =
+                            livro.author_name.join(", ");
+                    } else {
+                        autor =
+                            "Autor não informado";
+                    }
+
+                    let ano =
+                        livro.first_publish_year ||
+                        "Ano não informado";
+
+                    let capa;
+
+                    if (livro.cover_i) {
+
+                        capa =
+                            "https://covers.openlibrary.org/b/id/"
+                            + livro.cover_i
+                            + "-M.jpg";
+                    } else {
+                        capa =
+                            "https://placehold.co/200x280?text=Sem+Capa";
+                    }
+
+                    resultados.innerHTML += `
+
+                        <div class="livro">
+                            <img
+                                src="${capa}"
+                                alt="Capa do livro ${titulo}"
+                                onerror="this.src='https://placehold.co/200x280?text=Sem+Capa'"
+                            >
+
+                            <h3>
+                                ${titulo}
+                            </h3>
+
+                            <p>
+                                <strong>Autor:</strong>
+                                ${autor}
+                            </p>
+
+                            <p>
+                                <strong>Primeira publicação:</strong>
+                                ${ano}
+                            </p>
+                        </div>
+                    `;
+                }
+
+            } catch (erro) {
+                resultados.innerHTML = "";
+                mensagem.textContent =
+                    "Ocorreu um erro ao consultar a API. Tente novamente.";
+
+                console.log(erro);
+            }
+        }
+    </script>
+  </body>
+</html>
